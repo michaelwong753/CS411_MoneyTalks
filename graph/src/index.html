@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <title> Graph </title>
+</head>
+
+<body style="margin: 0">
+    <div id="info" style="margin: 0" class="center"></div>
+  <div id="chart" style="margin: 0"></div>
+      <div id="comments" style="margin: 0"></div>
+</body>
+
+
+<style>
+#body {
+  margin: 0;
+  background: #0e3040;
+}
+
+#chart {
+  background: #0e3040;
+  color: #67809f;
+  margin: 0;
+}
+
+#comments{
+  display:block;
+  width:100%;
+  height:100px;
+  border:2px solid black;
+  background-color: #0e3040;
+  bottom: 10px;
+  padding: 5px;
+  color: white;
+  border-color: black; 
+  margin: 0;
+}
+
+
+#info{
+  display:block;
+  width:100%;
+  height:50px;
+  border:2px solid white;
+  margin-left:auto;
+  margin-right:auto;
+  background-color: #0e3040;
+  color: white;
+  border-color: black;
+  margin: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+        table {
+            border-collapse: collapse;
+            border: 2px solid black;
+            box-shadow: inset 0 0 3px 0px #CECECE;
+            background-color: #0e3040;
+            color: white;
+            margin: 0;
+        }
+        th {
+            border: 1px solid black;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+        td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 5px;
+            color: white;
+            margin: 0;
+        }
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+</style>
+
+
+
+<script>
+var data;
+var columns = ['Nasdaq_Traded','Name','Exchange','Market_Category','ETF','Financial_Status','CQS_Symbol','NASDAQ_Symbol','NextShares'];
+    // create some people
+function getCSVdata( ) {
+    d3.csv("http://moneytalk.web.illinois.edu/pdf/meta.csv", function(d) {
+        return {
+            Nasdaq_Traded : d.Nasdaq_Traded,
+            Name: d.Name,
+            Exchange: d.Exchange,
+            Market_Category:d.Market_Category,
+            ETF:d.ETF,
+            Financial_Status: d.Financial_Status,
+            CQS_Symbol: d.CQS_Symbol,
+            NASDAQ_Symbol:d.NASDAQ_Symbol,
+            NextShares:d.NextShares
+        };
+    }).then(fulfilled);
+}
+
+function fulfilled(data) {
+  console.log(data);
+
+  var table = d3.select("#info").append("table"),
+  thead = table.append("thead"),
+  tbody = table.append("tbody");
+
+  // append the header row
+  thead.append("tr")
+    .selectAll("th")
+    .data(columns)
+    .enter()
+    .append("th")
+    .text(function(column) {
+      return column;
+    });
+
+  // create a row for each object in the data
+    var rows = tbody.selectAll("tr")
+      .data(data)
+      .enter()
+      .append("tr");
+
+      // create a cell in each row for each column
+      var cells = rows.selectAll("td")
+        .data(function(row) {
+          return columns.map(function(column) {
+            return {
+              column: column,
+              value: row[column]
+            };
+          });
+        })
+        .enter()
+        .append("td")
+        .text(function(d) {
+          return d.value;
+        });
+
+      return table;
+}
+
+ var columns2 = ['date','Comments','Score','Sentiment'];
+  // create some people
+  function getCSVdata2() {
+  d3.csv("http://moneytalk.web.illinois.edu/pdf/comments.csv", function(d) {
+    if(d.Comments != '') {
+      return {
+          date : new Date(d.Date*1000),
+          Comments: d.Comments,
+          Score: d.Score,
+          Sentiment:d.Sentiment,
+      }
+    };
+  }).then(fulfilledTwo);
+  }
+
+  function fulfilledTwo(data) {
+  console.log(data);
+
+  var table = d3.select("#comments").append("table"),
+  thead = table.append("thead"),
+  tbody = table.append("tbody");
+
+  // append the header row
+  thead.append("tr")
+  .selectAll("th")
+  .data(columns2)
+  .enter()
+  .append("th")
+  .text(function(column) {
+    return column;
+  });
+
+  // create a row for each object in the data
+  var rows = tbody.selectAll("tr")
+    .data(data)
+    .enter()
+    .append("tr");
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll("td")
+      .data(function(row) {
+        return columns2.map(function(column) {
+          return {
+            column: column,
+            value: row[column]
+          };
+        });
+      })
+      .enter()
+      .append("td")
+      .text(function(d) {
+        return d.value;
+      });
+
+    return table;
+  }
+
+async function FindOneComment(idInput){
+    const input = {
+     tick: idInput
+    };
+    data = await fetch('http://backendtest.moneytalk.web.illinois.edu/api/comment', {
+        method: 'POST',
+        body: JSON.stringify(input),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+        }
+    })
+    .then(response => response.json())
+    .then(json => {
+        return json
+    });
+    const inputTwo = {
+     tickerIN: idInput
+    };
+    dataTwo = await fetch('http://backendtest.moneytalk.web.illinois.edu/api/home/meta', {
+        method: 'POST',
+        body: JSON.stringify(inputTwo),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+        }
+    })
+    .then(response => response.json())
+    .then(json => {
+        return json
+    });
+    
+    return dataTwo
+}
+
+
+async function main(){
+    // var a = await(test)
+    // console.log(a)
+const loadDataEndOfDay = d3.csv("http://moneytalk.web.illinois.edu/pdf/stock.csv", d => ({
+    date: new Date(d.date),
+    volume: Number(d.volume),
+    high: Number(d.high),
+    low: Number(d.low),
+    open: Number(d.open),
+    close: Number(d.close),
+  //adjclose: Number(d.),
+    symbol: (d.ticker)
+  
+  }));
+
+  loadDataEndOfDay.then(async data => {
+    // render the chart here
+    var targetComment = await FindOneComment(data[0].symbol)
+    getCSVdata();
+    getCSVdata2();
+    console.log(targetComment)
+    console.log(data)
+    initialiseChart(data);
+  });
+  
+  const initialiseChart = data => {
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const width = window.innerWidth - margin.left - margin.right; // Use the window's width
+    const height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
+  
+    // add chart SVG to the page
+    const svg = d3
+      .select('#chart')
+      .append('svg')
+      .attr('width', width + margin['left'] + margin['right'])
+      .attr('height', height + margin['top'] + margin['bottom'])
+      .append('g')
+      .attr('transform', `translate(${margin['left']}, ${margin['top']})`);
+  
+  
+    // find data range
+    const xMin = d3.min(data, d => {
+      return d['date'];
+    });
+  
+    const xMax = d3.max(data, d => {
+      return d['date'];
+    });
+  
+    const yMin = d3.min(data, d => {
+      return d['close'];
+    });
+  
+    const yMax = d3.max(data, d => {
+      return d['close'];
+    });
+  
+    // scale using range
+    const xScale = d3
+      .scaleTime()
+      .domain([xMin, xMax])
+      .range([0, width]);
+  
+    const yScale = d3
+      .scaleLinear()
+      .domain([yMin - 5, yMax])
+      .range([height, 0]);
+  
+  
+    // create the axes component
+    svg
+      .append('g')
+      .attr('id', 'xAxis')
+      .attr('transform', `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale));
+  
+    svg
+      .append('g')
+      .attr('id', 'yAxis')
+      .attr('transform', `translate(${width}, 0)`)
+      .call(d3.axisRight(yScale));
+  
+      const line = d3
+        .line()
+        .x(d => {
+          return xScale(d['date']);
+        })
+        .y(d => {
+          return yScale(d['close']);
+        });
+      // Append the path and bind data
+      svg
+       .append('path')
+       .data([data])
+       .style('fill', 'none')
+       .attr('id', 'priceChart')
+       .attr('stroke', 'steelblue')
+       .attr('stroke-width', '1.5')
+       .attr('d', line);
+       // renders x and y crosshair
+       const focus = svg
+         .append('g')
+         .attr('class', 'focus')
+         .style('display', 'none');
+       focus.append('circle').attr('r', 4.5);
+       focus.append('line').classed('x', true);
+       focus.append('line').classed('y', true);
+       svg
+         .append('rect')
+         .attr('class', 'overlay')
+         .attr('width', width)
+         .attr('height', height)
+         .on('mouseover', () => focus.style('display', null))
+         .on('mouseout', () => focus.style('display', 'none'))
+         .on('mousemove', generateCrosshair);
+       d3.select('.overlay').style('fill', 'none');
+       d3.select('.overlay').style('pointer-events', 'all');
+       d3.selectAll('.focus line').style('fill', 'none');
+       d3.selectAll('.focus line').style('stroke', '#67809f');
+       d3.selectAll('.focus line').style('stroke-width', '1.5px');
+       d3.selectAll('.focus line').style('stroke-dasharray', '3 3');
+  
+       const bisectDate = d3.bisector(d => d.date).left;
+       function generateCrosshair() {
+         //returns corresponding value from the domain
+         const correspondingDate = xScale.invert(d3.pointer(event,this)[0]);
+         //gets insertion point
+         const i = bisectDate(data, correspondingDate, 1);
+         const d0 = data[i - 1];
+         const d1 = data[i];
+        const currentPoint = correspondingDate - d0['date'] > d1['date'] - correspondingDate ? d1 : d0;
+  
+         focus.attr('transform',`translate(${xScale(currentPoint['date'])},     ${yScale(currentPoint['close'])})`);
+  
+       focus
+         .select('line.x')
+         .attr('x1', 0)
+         .attr('x2', width - xScale(currentPoint['date']))
+         .attr('y1', 0)
+         .attr('y2', 0);
+       focus
+         .select('line.y')
+         .attr('x1', 0)
+         .attr('x2', 0)
+         .attr('y1', 0)
+         .attr('y2', height - yScale(currentPoint['close']));
+        updateLegends(currentPoint);
+      }
+      const updateLegends = currentData => {
+          d3.selectAll('.lineLegend').remove();
+            const legendKeys = Object.keys(data[0]);
+            const lineLegend = svg
+              .selectAll('.lineLegend')
+              .data(legendKeys)
+              .enter()
+              .append('g')
+              .attr('class', 'lineLegend')
+              .attr('transform', (d, i) => {
+                return `translate(0, ${i * 20})`;
+              });
+            lineLegend
+              .append('text')
+              .text(d => {
+                if (d === 'date') {
+                  return `${d}: ${currentData[d].toLocaleDateString()}`;
+                } else if ( d === 'high' || d === 'low' || d === 'open' || d === 'close') {
+                  return `${d}: ${currentData[d].toFixed(2)}`;
+                } else {
+                  return `${d}: ${currentData[d]}`;
+                }
+              })
+              .style('fill', 'white')
+              .attr('transform', 'translate(15,9)');
+            };
+            /* Volume series bars */
+              const volData = data.filter(d => d['volume'] !== null && d['volume'] !== 0);
+  
+              const yMinVolume = d3.min(volData, d => {
+                return Math.min(d['volume']);
+              });
+  
+              const yMaxVolume = d3.max(volData, d => {
+                return Math.max(d['volume']);
+              });
+  
+              const yVolumeScale = d3
+                .scaleLinear()
+                .domain([yMinVolume, yMaxVolume])
+                .range([height, height * (3 / 4)]);
+  
+              svg
+                .selectAll()
+                .data(volData)
+                .enter()
+                .append('rect')
+                .attr('x', d => {
+                  return xScale(d['date']);
+                })
+                .attr('y', d => {
+                  return yVolumeScale(d['volume']);
+                })
+                .attr('class', 'vol')
+                .attr('fill', (d, i) => {
+                  if (i === 0) {
+                    return '#03a678';
+                  } else {
+                    return volData[i - 1].close > d.close ? '#c0392b' : '#03a678'; // green bar if price is rising during that period, and red when price  is falling
+                  }
+                })
+                .attr('width', 1)
+                .attr('height', d => {
+                  return height - yVolumeScale(d['volume']);
+                });
+  
+                const movingAverage = (data, numberOfPricePoints) => {
+                  return data.map((row, index, total) => {
+                    const start = Math.max(0, index - numberOfPricePoints);
+                    const end = index;
+                    const subset = total.slice(start, end + 1);
+                    const sum = subset.reduce((a, b) => {
+                      return a + b['close'];
+                    }, 0);
+  
+                    return {
+                      date: row['date'],
+                      average: sum / subset.length
+                    };
+                  });
+                };
+  
+    // calculates simple moving average over 50 days
+    const movingAverageData = movingAverage(data, 49);
+    // generates moving average curve when called
+    const movingAverageLine = d3
+     .line()
+     .x(d => {
+      return xScale(d['date']);
+     })
+     .y(d => {
+      return yScale(d['average']);
+     })
+      .curve(d3.curveBasis);
+    svg
+      .append('path')
+      .data([movingAverageData])
+      .style('fill', 'none')
+      .attr('id', 'movingAverageLine')
+      .attr('stroke', '#FF8900')
+      .attr('d', movingAverageLine);
+  };
+}
+main();
+</script>
