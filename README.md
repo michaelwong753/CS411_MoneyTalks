@@ -15,4 +15,5 @@ https://moneytalk.web.illinois.edu/
 <h2>Some screenshot from the website:</h2>
 
 ![alt text](https://github.com/michaelwong753/MoneyTalks/blob/main/ex1.png)
+![alt text](https://github.com/michaelwong753/MoneyTalks/blob/main/ex2.png)
 
