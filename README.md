@@ -1,4 +1,4 @@
-# CS411_MoneyTalks
+# MoneyTalks
 The project accomplished our goal of creating a visual tool that aggregates both data and information of over 50 different stocks. We accomplished our end goal of making a service, hosted on a website, that helps people make investment decisions based on past performance metrics, public perception, and meta information about many different stocks in the S&amp;P 500.
 
 The daily stock data is stored in a MySQL database that we downloaded from running the python script located in the following Kaggle link . This link contains a script that scrapes daily stock performance metrics for almost every day for every stock in the NASDAQ. We also have a second table that stores the metadata for each stock. This table has a row for each stock and contains various high level information for each ticker, while the stock data table contains daily financial metrics such as the stock’s open, close, and volume (among others) for every trading day in the last 5 years. 
